@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: face-recognition-app
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn backend.app:app
+    envVars:
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+        value: facedata-462708-981ca5f2a971.json

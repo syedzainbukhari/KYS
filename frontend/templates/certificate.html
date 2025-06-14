@@ -1,0 +1,71 @@
+<!-- <h2>Certificate of Completion</h2>
+<p>Congratulations {{ user.name }}!</p>
+<p>Score: {{ user.score }}</p>
+<p>Time: {{ user.quiz_time }} seconds</p>
+<img src="/{{ user.image_path }}" alt="Your Photo" width="150"> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate - Quiz Completion</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+<body>
+    <div class="container">
+        <div class="certificate-container">
+            <div class="certificate" id="certificate">
+                <div class="certificate-header">
+                    <h1>Certificate of Achievement</h1>
+                    <div class="certificate-border"></div>
+                </div>
+                
+                <div class="certificate-content">
+                    <div class="user-photo-cert">
+                        <img id="certUserPhoto" src="/placeholder.svg" alt="User Photo">
+                    </div>
+                    
+                    <div class="certificate-text">
+                        <p class="cert-intro">This is to certify that</p>
+                        <h2 class="cert-name" id="certUserName">John Doe</h2>
+                        <p class="cert-achievement">has successfully completed the quiz with</p>
+                        
+                        <div class="cert-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Score:</span>
+                                <span class="stat-value" id="certScore">0/10</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Time:</span>
+                                <span class="stat-value" id="certTime">00:00</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Performance:</span>
+                                <span class="stat-value" id="certGrade">Excellent</span>
+                            </div>
+                        </div>
+                        
+                        <p class="cert-date">Date: <span id="certDate"></span></p>
+                    </div>
+                </div>
+                
+                <div class="certificate-footer">
+                    <div class="signature">
+                        <div class="signature-line"></div>
+                        <p>Quiz Administrator</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="certificate-actions">
+                <button id="downloadCert" class="btn-primary">Download Certificate</button>
+                <button id="retakeQuiz" class="btn-secondary">Retake Quiz</button>
+                <button id="newQuiz" class="btn-success">Start New Quiz</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="certificate.js"></script>
+</body>
+</html>

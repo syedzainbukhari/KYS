@@ -1,0 +1,52 @@
+[
+  {
+    "question": "What is √144?",
+    "options": ["11", "12", "13", "14"],
+    "answer": "12"
+  },
+  {
+    "question": "If x = 3, what is the value of 2x² + x?",
+    "options": ["21", "18", "15", "12"],
+    "answer": "21"
+  },
+  {
+    "question": "What is 15²?",
+    "options": ["225", "250", "200", "240"],
+    "answer": "225"
+  },
+  {
+    "question": "Simplify: 2(4 + 6) ÷ 5",
+    "options": ["2", "4", "6", "3"],
+    "answer": "4"
+  },
+  {
+    "question": "If 5 men can complete a task in 8 days, how many days for 10 men?",
+    "options": ["2", "3", "4", "5"],
+    "answer": "4"
+  },
+  {
+    "question": "What is 20% of 120 + 15% of 80?",
+    "options": ["36", "34", "32", "30"],
+    "answer": "36"
+  },
+  {
+    "question": "What is the cube of 4?",
+    "options": ["64", "32", "16", "48"],
+    "answer": "64"
+  },
+  {
+    "question": "What is 7³?",
+    "options": ["343", "273", "316", "300"],
+    "answer": "343"
+  },
+  {
+    "question": "Solve: (5² - 4²)",
+    "options": ["5", "7", "9", "11"],
+    "answer": "9"
+  },
+  {
+    "question": "If a car travels 60 km in 1.5 hours, what is the speed?",
+    "options": ["40 km/h", "45 km/h", "50 km/h", "60 km/h"],
+    "answer": "40 km/h"
+  }
+]

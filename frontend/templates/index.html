@@ -1,0 +1,604 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Kid Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background: #f0f4f8;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .card {
+      border-radius: 1rem;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    video {
+      border-radius: 0.5rem;
+    }
+    #snapshot-preview {
+      display: none;
+      max-width: 100%;
+      border: 2px solid #ccc;
+      border-radius: 0.5rem;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card p-4">
+        <h3 class="mb-4 text-center">🎓 Smart Kid Registration</h3>
+        <form id="user-form">
+          <div class="mb-3">
+            <label for="name" class="form-label">Child's Name</label>
+            <input type="text" class="form-control" id="name" required>
+          </div>
+          <div class="mb-3">
+            <label for="dob" class="form-label">Date of Birth</label>
+            <input type="date" class="form-control" id="dob" required>
+          </div>
+          <div class="mb-3">
+            <label for="age" class="form-label">Age</label>
+            <input type="number" class="form-control" id="age" readonly>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">📸 Capture Face</label>
+            <div class="text-center">
+              <video id="video" width="100%" autoplay></video>
+              <button type="button" class="btn btn-primary mt-3" id="capture">Capture</button>
+              <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+              <img id="snapshot-preview" />
+            </div>
+          </div>
+          <div class="d-grid">
+            <button type="submit" class="btn btn-success">Save & Start Quiz</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const dobInput = document.getElementById("dob");
+  const ageInput = document.getElementById("age");
+  dobInput.addEventListener("change", () => {
+    const dob = new Date(dobInput.value);
+    const age = new Date().getFullYear() - dob.getFullYear();
+    ageInput.value = age;
+  });
+
+  const video = document.getElementById("video");
+  const canvas = document.getElementById("canvas");
+  const captureBtn = document.getElementById("capture");
+  const previewImg = document.getElementById("snapshot-preview");
+
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then((stream) => {
+      video.srcObject = stream;
+    })
+    .catch((err) => {
+      alert("Unable to access camera: " + err);
+    });
+
+  captureBtn.addEventListener("click", () => {
+    canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = canvas.toDataURL("image/jpeg");
+    previewImg.src = imageData;
+    previewImg.style.display = "block";
+  });
+
+  document.getElementById("user-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = document.getElementById("name").value;
+    const dob = document.getElementById("dob").value;
+    const age = document.getElementById("age").value;
+    const imageData = canvas.toDataURL("image/jpeg");
+
+    // Submit data to backend (to be implemented in Flask)
+    fetch("/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, dob, age, image: imageData })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        window.location.href = "/quiz"; // redirect to quiz page
+      } else {
+        alert("Error: " + data.message);
+      }
+    });
+  });
+</script>
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Kid Portal - Registration</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #48bb78;
+            --warning-color: #ed8936;
+            --danger-color: #f56565;
+            --light-bg: #f7fafc;
+            --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .main-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .registration-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .card-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .card-body {
+            padding: 2.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-control {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .camera-section {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 2px dashed #cbd5e0;
+            transition: all 0.3s ease;
+        }
+
+        .camera-section.active {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        #video {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 3px solid #e2e8f0;
+        }
+
+        #snapshot-preview {
+            max-width: 300px;
+            border-radius: 12px;
+            border: 3px solid var(--success-color);
+            margin-top: 1rem;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .btn-custom {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            border-radius: 12px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            font-size: 1rem;
+            color: white;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+
+        .btn-custom:active {
+            transform: translateY(0);
+        }
+
+        .btn-capture {
+            background: var(--success-color);
+            margin-top: 1rem;
+        }
+
+        .btn-capture:hover {
+            background: #38a169;
+            box-shadow: 0 10px 20px rgba(72, 187, 120, 0.3);
+        }
+
+        .loading-spinner {
+            display: none;
+            margin: 0 auto;
+        }
+
+        .age-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-left: 0.5rem;
+        }
+
+        .status-message {
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .status-success {
+            background: rgba(72, 187, 120, 0.1);
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
+        }
+
+        .status-error {
+            background: rgba(245, 101, 101, 0.1);
+            border: 1px solid var(--danger-color);
+            color: var(--danger-color);
+        }
+
+        @media (max-width: 768px) {
+            .card-header h1 {
+                font-size: 2rem;
+            }
+            
+            .card-body {
+                padding: 1.5rem;
+            }
+            
+            #video {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-container">
+            <div class="registration-card">
+                <div class="card-header">
+                    <h1><i class="fas fa-graduation-cap"></i> Smart Kid Portal</h1>
+                    <p>Register your child for an amazing learning experience!</p>
+                </div>
+                
+                <div class="card-body">
+                    <div id="status-message" class="status-message"></div>
+                    
+                    <form id="user-form">
+                        <div class="form-group">
+                            <label for="name" class="form-label">
+                                <i class="fas fa-user text-primary"></i>
+                                Child's Full Name
+                            </label>
+                            <input type="text" class="form-control" id="name" placeholder="Enter your child's name" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="dob" class="form-label">
+                                        <i class="fas fa-calendar text-primary"></i>
+                                        Date of Birth
+                                    </label>
+                                    <input type="date" class="form-control" id="dob" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="age" class="form-label">
+                                        <i class="fas fa-birthday-cake text-primary"></i>
+                                        Age
+                                        <span id="age-category" class="age-badge" style="display: none;"></span>
+                                    </label>
+                                    <input type="number" class="form-control" id="age" placeholder="Auto-calculated" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-camera text-primary"></i>
+                                Capture Profile Photo
+                            </label>
+                            <div class="camera-section" id="camera-section">
+                                <video id="video" autoplay playsinline></video>
+                                <div>
+                                    <button type="button" class="btn btn-custom btn-capture" id="capture">
+                                        <i class="fas fa-camera"></i> Take Photo
+                                    </button>
+                                    <button type="button" class="btn btn-custom btn-capture" id="retake" style="display: none;">
+                                        <i class="fas fa-redo"></i> Retake
+                                    </button>
+                                </div>
+                                <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+                                <img id="snapshot-preview" style="display: none;" />
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-custom btn-lg" id="submit-btn">
+                                <i class="fas fa-rocket"></i> Save & Start Quiz
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="loading-spinner">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        class SmartKidRegistration {
+            constructor() {
+                this.initializeElements();
+                this.setupEventListeners();
+                this.initializeCamera();
+            }
+
+            initializeElements() {
+                this.dobInput = document.getElementById("dob");
+                this.ageInput = document.getElementById("age");
+                this.ageCategorySpan = document.getElementById("age-category");
+                this.video = document.getElementById("video");
+                this.canvas = document.getElementById("canvas");
+                this.captureBtn = document.getElementById("capture");
+                this.retakeBtn = document.getElementById("retake");
+                this.previewImg = document.getElementById("snapshot-preview");
+                this.form = document.getElementById("user-form");
+                this.submitBtn = document.getElementById("submit-btn");
+                this.statusMessage = document.getElementById("status-message");
+                this.cameraSection = document.getElementById("camera-section");
+                this.loadingSpinner = document.querySelector(".loading-spinner");
+            }
+
+            setupEventListeners() {
+                this.dobInput.addEventListener("change", () => this.calculateAge());
+                this.captureBtn.addEventListener("click", () => this.capturePhoto());
+                this.retakeBtn.addEventListener("click", () => this.retakePhoto());
+                this.form.addEventListener("submit", (e) => this.handleSubmit(e));
+            }
+
+            async initializeCamera() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { 
+                            width: 640, 
+                            height: 480,
+                            facingMode: 'user'
+                        } 
+                    });
+                    this.video.srcObject = stream;
+                    this.cameraSection.classList.add('active');
+                } catch (err) {
+                    this.showStatus("Unable to access camera. Please ensure camera permissions are granted.", "error");
+                    console.error("Camera error:", err);
+                }
+            }
+
+            calculateAge() {
+                if (!this.dobInput.value) return;
+                
+                const dob = new Date(this.dobInput.value);
+                const today = new Date();
+                let age = today.getFullYear() - dob.getFullYear();
+                const monthDiff = today.getMonth() - dob.getMonth();
+                
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+                    age--;
+                }
+                
+                this.ageInput.value = age;
+                this.updateAgeCategory(age);
+            }
+
+            updateAgeCategory(age) {
+                let category = "";
+                let color = "";
+                
+                if (age >= 6 && age <= 10) {
+                    category = "Beginner";
+                    color = "#48bb78";
+                } else if (age >= 12 && age <= 16) {
+                    category = "Intermediate";
+                    color = "#ed8936";
+                } else if (age >= 17 && age <= 25) {
+                    category = "Advanced";
+                    color = "#667eea";
+                } else {
+                    category = "Custom";
+                    color = "#718096";
+                }
+                
+                this.ageCategorySpan.textContent = category;
+                this.ageCategorySpan.style.backgroundColor = color;
+                this.ageCategorySpan.style.display = "inline-block";
+            }
+
+            capturePhoto() {
+                const context = this.canvas.getContext("2d");
+                context.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+                
+                const imageData = this.canvas.toDataURL("image/jpeg", 0.8);
+                this.previewImg.src = imageData;
+                this.previewImg.style.display = "block";
+                
+                this.video.style.display = "none";
+                this.captureBtn.style.display = "none";
+                this.retakeBtn.style.display = "inline-block";
+                
+                this.showStatus("Photo captured successfully!", "success");
+            }
+
+            retakePhoto() {
+                this.video.style.display = "block";
+                this.previewImg.style.display = "none";
+                this.captureBtn.style.display = "inline-block";
+                this.retakeBtn.style.display = "none";
+                this.hideStatus();
+            }
+
+            showStatus(message, type) {
+                this.statusMessage.textContent = message;
+                this.statusMessage.className = `status-message status-${type}`;
+                this.statusMessage.style.display = "block";
+                
+                if (type === "success") {
+                    setTimeout(() => this.hideStatus(), 3000);
+                }
+            }
+
+            hideStatus() {
+                this.statusMessage.style.display = "none";
+            }
+
+            async handleSubmit(e) {
+                e.preventDefault();
+                
+                const name = document.getElementById("name").value;
+                const dob = this.dobInput.value;
+                const age = this.ageInput.value;
+                
+                if (!name || !dob || !age) {
+                    this.showStatus("Please fill in all required fields.", "error");
+                    return;
+                }
+                
+                if (!this.previewImg.src || this.previewImg.style.display === "none") {
+                    this.showStatus("Please capture a photo before proceeding.", "error");
+                    return;
+                }
+                
+                const imageData = this.canvas.toDataURL("image/jpeg", 0.8);
+                
+                this.submitBtn.disabled = true;
+                this.loadingSpinner.style.display = "block";
+                
+                try {
+                    const response = await fetch("/register", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ name, dob, age, image: imageData })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.showStatus("Registration successful! Redirecting to quiz...", "success");
+                        setTimeout(() => {
+                            window.location.href = "/quiz";
+                        }, 2000);
+                    } else {
+                        this.showStatus("Registration failed: " + data.message, "error");
+                    }
+                } catch (error) {
+                    console.error("Registration error:", error);
+                    this.showStatus("Network error. Please try again.", "error");
+                } finally {
+                    this.submitBtn.disabled = false;
+                    this.loadingSpinner.style.display = "none";
+                }
+            }
+        }
+
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new SmartKidRegistration();
+        });
+    </script>
+</body>
+</html>

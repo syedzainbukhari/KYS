@@ -1,0 +1,15 @@
+# Python cache and bytecode
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+
+# Environment variables
+.env
+
+# macOS system file
+.DS_Store
+
+# Google API credentials (DO NOT COMMIT)
+facedata-462708-981ca5f2a971.json

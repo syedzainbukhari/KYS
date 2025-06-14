@@ -1,0 +1,52 @@
+[
+  {
+    "question": "What is 12 x 3?",
+    "options": ["36", "30", "33", "39"],
+    "answer": "36"
+  },
+  {
+    "question": "What is 100 ÷ 5?",
+    "options": ["15", "25", "20", "30"],
+    "answer": "20"
+  },
+  {
+    "question": "What is (5 + 3) × 2?",
+    "options": ["16", "10", "12", "18"],
+    "answer": "16"
+  },
+  {
+    "question": "What is 20% of 50?",
+    "options": ["10", "20", "15", "5"],
+    "answer": "10"
+  },
+  {
+    "question": "Solve: x + 4 = 9. What is x?",
+    "options": ["3", "5", "4", "6"],
+    "answer": "5"
+  },
+  {
+    "question": "What is the square of 6?",
+    "options": ["36", "30", "12", "24"],
+    "answer": "36"
+  },
+  {
+    "question": "What is 81 ÷ 9?",
+    "options": ["7", "9", "8", "6"],
+    "answer": "9"
+  },
+  {
+    "question": "What is 15% of 80?",
+    "options": ["10", "12", "15", "18"],
+    "answer": "12"
+  },
+  {
+    "question": "What is the value of 3² + 4²?",
+    "options": ["25", "16", "9", "13"],
+    "answer": "25"
+  },
+  {
+    "question": "If 3 pens cost Rs. 45, how much does 1 pen cost?",
+    "options": ["12", "15", "10", "18"],
+    "answer": "15"
+  }
+]
