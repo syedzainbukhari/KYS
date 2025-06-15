@@ -320,11 +320,83 @@ def get_user():
         return jsonify({"success": False, "message": "User not found"}), 404
 
 
-@app.route("/certificate")
-def certificate():
-    user = session.get("user") or {}
-    return render_template("certificate.html", user=user)
+# @app.route("/certificate")
+# def certificate():
+#     user = session.get("user") or {}
+#     return render_template("certificate.html", user=user)
 
-
+@app.route('/api/certificate-data')
+def certificate_data():
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"success": False, "message": "User not found"}), 404
+    
+    try:
+        # Get user data from database
+        cursor.execute("""
+            SELECT name, age, score, time_taken, dob, image_data 
+            FROM faceData 
+            WHERE id = %s
+        """, (user_id,))
+        
+        result = cursor.fetchone()
+        if not result:
+            return jsonify({"success": False, "message": "User data not found"}), 404
+        
+        name, age, score, time_taken, dob, image_data = result
+        
+        # Get score and time from URL parameters if available (for direct links)
+        url_score = request.args.get('score')
+        url_time = request.args.get('time')
+        
+        # Use URL parameters if available, otherwise use database values
+        final_score = int(url_score) if url_score else (score if score is not None else 0)
+        final_time = int(url_time) if url_time else (time_taken if time_taken is not None else 0)
+        
+        # Determine quiz level and total questions based on age
+        if 6 <= age <= 10:
+            level = "Beginner"
+            total_questions = 10
+        elif 11 <= age <= 16:
+            level = "Intermediate" 
+            total_questions = 10
+        else:
+            level = "Advanced"
+            total_questions = 10
+        
+        # Calculate accuracy
+        accuracy = round((final_score / total_questions) * 100) if total_questions > 0 else 0
+        
+        # Format time
+        minutes = int(final_time) // 60
+        seconds = int(final_time) % 60
+        time_formatted = f"{minutes}:{seconds:02d}"
+        
+        # Generate unique certificate ID
+        certificate_id = f"SKP-{datetime.now().year}-{user_id:04d}-{uuid.uuid4().hex[:6].upper()}"
+        
+        # Convert image to base64 for display
+        image_base64 = None
+        if image_data:
+            image_base64 = f"data:image/jpeg;base64,{base64.b64encode(image_data).decode('utf-8')}"
+        
+        return jsonify({
+            "success": True,
+            "name": name,
+            "age": age,
+            "image": image_base64,
+            "score": final_score,
+            "total_questions": total_questions,
+            "accuracy": accuracy,
+            "time_taken": final_time,
+            "time_formatted": time_formatted,
+            "quiz_level": level,
+            "certificate_id": certificate_id,
+            "date": datetime.now().strftime("%B %d, %Y")
+        })
+        
+    except Exception as e:
+        print(f"Database error: {str(e)}")  # For debugging
+        return jsonify({"success": False, "message": f"Database error: {str(e)}"}), 500
 if __name__ == '__main__':
     app.run(debug=True)
