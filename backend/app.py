@@ -337,7 +337,6 @@ def certificate_data():
         user_id = int(user_id)
     except (ValueError, TypeError):
         return jsonify({"success": False, "message": "Invalid user ID"}), 400
-
     try:
         cursor.execute("""
             SELECT name, age, score, time_taken, dob, image_data 
