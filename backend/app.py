@@ -198,7 +198,6 @@ def index():
 
 
 @app.route('/register', methods=['POST'])
-@app.route('/register', methods=['POST'])
 def register():
     try:
         data = request.get_json()
