@@ -188,7 +188,6 @@ db = psycopg2.connect(
     user="facedb_g05r_user",
     password="l3KMVuhVMJYqPXSlGlJbY4xHzmi07i59"
 )
-
 cursor = db.cursor()
 
 # ========================== Routes ============================
@@ -229,9 +228,12 @@ def register():
     session['age'] = int(age)
     session['user_id'] = user_id
 
-    # Convert DOB string to datetime
-    dob_obj = datetime.strptime(dob, "%Y-%m-%d")
-    export_single_record(name, dob_obj, age, image_bytes)
+    # Convert DOB string to datetime and export to Google
+    try:
+        dob_obj = datetime.strptime(dob, "%Y-%m-%d")
+        export_single_record(name, dob_obj, age, image_bytes)
+    except Exception as e:
+        print("❌ Google Sync Error:", str(e))
 
     return jsonify({"success": True})
 
@@ -239,7 +241,6 @@ def register():
 @app.route('/quiz')
 def quiz():
     age = session.get('age')
-
     if not age:
         return redirect('/')
 
