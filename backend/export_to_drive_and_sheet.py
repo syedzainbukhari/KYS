@@ -7,14 +7,15 @@ from googleapiclient.http import MediaIoBaseUpload
 import gspread
 
 # --- Google API Setup ---
-SERVICE_ACCOUNT_FILE = 'credentials.json'  # Your service account file
-SCOPES = [
-    'https://www.googleapis.com/auth/drive',
-    'https://www.googleapis.com/auth/spreadsheets'
-]
+import base64
+import json
 
-credentials = service_account.Credentials.from_service_account_file(
-    SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+# Get base64-encoded creds from environment
+creds_json = base64.b64decode(os.environ['GOOGLE_CREDS_B64']).decode('utf-8')
+creds_dict = json.loads(creds_json)
+
+credentials = service_account.Credentials.from_service_account_info(
+    creds_dict, scopes=SCOPES)
 
 # --- Google Drive Setup ---
 drive_service = build('drive', 'v3', credentials=credentials)
