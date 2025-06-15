@@ -33,14 +33,20 @@ class Certificate {
       const userId = params.get("id");
 
       // Build API URL with parameters if they exist
-      let apiUrl = "/api/certificate-data"
-        if (score && time && userId) {
-            apiUrl += `?score=${score}&time=${time}&id=${userId}`
-            console.log(`📊 Using URL parameters: score=${score}, time=${time}, id=${userId}`)
-        } else {
-                console.warn("⚠️ Missing one or more parameters: score, time, or id")
-        }
+        let apiUrl = `${window.location.origin}/api/certificate-data`
 
+        if (score && time && userId) {
+            const queryParams = new URLSearchParams({
+                score,
+                time,
+                id: userId,
+        }).toString()
+
+            apiUrl += `?${queryParams}`
+            console.log(`📊 Final API URL: ${apiUrl}`)
+        } else {
+            console.warn("⚠️ Missing one or more parameters: score, time, or id")
+        }
 
       const response = await fetch(apiUrl)
 
