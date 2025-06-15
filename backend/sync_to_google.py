@@ -61,7 +61,7 @@ def export_single_record(name, dob, age, image_data):
     creds_json = base64.b64decode(os.environ["GOOGLE_CREDS_B64"]).decode("utf-8")
     creds_dict = json.loads(creds_json)
     creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
-    creds = ServiceAccountCredentials.from_json_keyfile_name(creds_path, scope)
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 
     # Authorize Sheets and Drive
     sheet = gspread.authorize(creds).open_by_key(SPREADSHEET_ID).sheet1
