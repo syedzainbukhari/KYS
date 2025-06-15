@@ -198,44 +198,48 @@ def index():
 
 
 @app.route('/register', methods=['POST'])
+@app.route('/register', methods=['POST'])
 def register():
-    data = request.get_json()
-    name = data['name']
-    dob = data['dob']
-    age = data['age']
-    image_data = data['image'].split(',')[1]
-
-    image_bytes = base64.b64decode(image_data)
-
-    # Save image to local folder (relative path)
-    filename = f"{uuid.uuid4().hex}.jpg"
-    save_path = os.path.join('captured_faces', filename)
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
-    with open(save_path, 'wb') as f:
-        f.write(image_bytes)
-
-    # Insert into PostgreSQL
-    cursor.execute(
-        "INSERT INTO faceData (name, dob, age, image_data) VALUES (%s, %s, %s, %s)",
-        (name, dob, age, psycopg2.Binary(image_bytes))
-    )
-    db.commit()
-
-    # Fetch last inserted ID in PostgreSQL
-    cursor.execute("SELECT currval(pg_get_serial_sequence('faceData', 'id'))")
-    user_id = cursor.fetchone()[0]
-
-    session['age'] = int(age)
-    session['user_id'] = user_id
-
-    # Convert DOB string to datetime and export to Google
     try:
+        data = request.get_json()
+        name = data['name']
+        dob = data['dob']
+        age = data['age']
+        image_data = data['image'].split(',')[1]
+
+        image_bytes = base64.b64decode(image_data)
+
+        # Save image to local folder (relative path)
+        filename = f"{uuid.uuid4().hex}.jpg"
+        save_path = os.path.join('captured_faces', filename)
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        with open(save_path, 'wb') as f:
+            f.write(image_bytes)
+
+        # Insert into PostgreSQL
+        cursor.execute(
+            "INSERT INTO faceData (name, dob, age, image_data) VALUES (%s, %s, %s, %s)",
+            (name, dob, age, psycopg2.Binary(image_bytes))
+        )
+        db.commit()
+
+        # Fetch last inserted ID in PostgreSQL
+        cursor.execute("SELECT currval(pg_get_serial_sequence('faceData', 'id'))")
+        user_id = cursor.fetchone()[0]
+
+        session['age'] = int(age)
+        session['user_id'] = user_id
+
+        # Export to Google Drive & Sheet
         dob_obj = datetime.strptime(dob, "%Y-%m-%d")
         export_single_record(name, dob_obj, age, image_bytes)
-    except Exception as e:
-        print("❌ Google Sync Error:", str(e))
 
-    return jsonify({"success": True})
+        return jsonify({"success": True})
+    
+    except Exception as e:
+        # Print error to logs for debugging
+        print("❌ Registration Error:", str(e))
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @app.route('/quiz')
