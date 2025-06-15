@@ -178,7 +178,7 @@ from datetime import datetime
 app = Flask(__name__, template_folder='../frontend/templates', static_folder='../frontend/static')
 
 # Use environment variable for production secret
-app.secret_key = os.getenv("SECRET_KEY", "zain_1234_super_secret")
+app.secret_key = os.getenv("SECRET_KEY", "zain_1234_super_secret")  # Safe fallback for local dev
 
 # PostgreSQL connection settings from Render
 db = psycopg2.connect(
@@ -190,30 +190,155 @@ db = psycopg2.connect(
 )
 cursor = db.cursor()
 
-# ... (keep all your existing routes) ...
+# ========================== Routes ============================
 
-# ADD THIS MISSING ROUTE:
-@app.route('/certificate')
-def certificate():
-    user_id = session.get('user_id')
-    if not user_id:
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+
+@app.route('/register', methods=['POST'])
+def register():
+    try:
+        data = request.get_json()
+        name = data['name']
+        dob = data['dob']
+        age = data['age']
+        image_data = data['image'].split(',')[1]
+
+        image_bytes = base64.b64decode(image_data)
+
+        # Save image to local folder (relative path)
+        filename = f"{uuid.uuid4().hex}.jpg"
+        save_path = os.path.join('captured_faces', filename)
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        with open(save_path, 'wb') as f:
+            f.write(image_bytes)
+
+        # Insert into PostgreSQL
+        cursor.execute(
+            "INSERT INTO faceData (name, dob, age, image_data) VALUES (%s, %s, %s, %s)",
+            (name, dob, age, psycopg2.Binary(image_bytes))
+        )
+        db.commit()
+
+        # Fetch last inserted ID in PostgreSQL
+        cursor.execute("SELECT currval(pg_get_serial_sequence('faceData', 'id'))")
+        user_id = cursor.fetchone()[0]
+
+        session['age'] = int(age)
+        session['user_id'] = user_id
+
+        # Export to Google Drive & Sheet
+        dob_obj = datetime.strptime(dob, "%Y-%m-%d")
+        export_single_record(name, dob_obj, age, image_bytes)
+
+        return jsonify({"success": True})
+    
+    except Exception as e:
+        # Print error to logs for debugging
+        print("❌ Registration Error:", str(e))
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/quiz')
+def quiz():
+    age = session.get('age')
+    if not age:
         return redirect('/')
-    
-    # Optional: Get score and time from URL parameters (for direct links)
-    score = request.args.get('score')
-    time_taken = request.args.get('time')
-    
-    return render_template('certificate.html')
 
-# Your existing certificate_data route is perfect!
-@app.route('/api/certificate-data')
-def certificate_data():
+    if 6 <= age <= 10:
+        group = 'A'
+    elif 11 <= age <= 16:
+        group = 'B'
+    else:
+        group = 'C'
+
+    return render_template('quiz.html', group=group)
+
+
+@app.route('/api/get-questions/<group>')
+def get_questions(group):
+    questions_by_group = {
+        'A': [
+            {"question": "What color is the sky?", "options": ["Blue", "Green", "Red"], "answer": "Blue"},
+            {"question": "How many legs does a spider have?", "options": ["6", "8", "10"], "answer": "8"},
+        ],
+        'B': [
+            {"question": "What is 12 * 5?", "options": ["60", "50", "45"], "answer": "60"},
+            {"question": "What gas do plants absorb?", "options": ["Oxygen", "Carbon Dioxide", "Nitrogen"], "answer": "Carbon Dioxide"},
+        ],
+        'C': [
+            {"question": "Who developed the theory of relativity?", "options": ["Newton", "Einstein", "Tesla"], "answer": "Einstein"},
+            {"question": "What's the capital of Canada?", "options": ["Toronto", "Ottawa", "Vancouver"], "answer": "Ottawa"},
+        ]
+    }
+
+    questions = questions_by_group.get(group.upper())
+    if not questions:
+        return {"success": False, "message": "Invalid group"}, 400
+
+    random.shuffle(questions)
+    return {"success": True, "questions": questions[:10]}
+
+
+@app.route('/submit-quiz', methods=['POST'])
+def submit_quiz():
+    data = request.json
+    score = data.get('score')
+    time_taken = data.get('time')
+    user_id = session.get('user_id')
+
+    if user_id and score is not None:
+        cursor.execute("UPDATE faceData SET score=%s, time_taken=%s WHERE id=%s", (score, time_taken, user_id))
+        db.commit()
+        return {"success": True}
+    return {"success": False, "message": "Missing data"}, 400
+
+
+@app.route('/get-image/<int:user_id>')
+def get_image(user_id):
+    cursor.execute("SELECT image_data FROM faceData WHERE id = %s", (user_id,))
+    result = cursor.fetchone()
+    if result and result[0]:
+        return Response(result[0], mimetype='image/jpeg')
+    else:
+        return "Image not found", 404
+
+
+@app.route('/get-user')
+def get_user():
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({"success": False, "message": "User not found"}), 404
-    
+
+    cursor.execute("SELECT id, name, age FROM faceData WHERE id = %s", (user_id,))
+    result = cursor.fetchone()
+    if result:
+        return jsonify({"success": True, "user": {"id": result[0], "name": result[1], "age": result[2]}})
+    else:
+        return jsonify({"success": False, "message": "User not found"}), 404
+
+
+# @app.route("/certificate")
+# def certificate():
+#     user = session.get("user") or {}
+#     return render_template("certificate.html", user=user)
+
+@app.route("/certificate")
+def certificate():
+    return render_template("certificate.html")
+
+@app.route('/api/certificate-data')
+def certificate_data():
+    user_id = session.get('user_id') or request.args.get('id')
+
     try:
-        # Get user data from database
+        user_id = int(user_id)
+    except (ValueError, TypeError):
+        return jsonify({"success": False, "message": "Invalid user ID"}), 400
+
+    try:
         cursor.execute("""
             SELECT name, age, score, time_taken, dob, image_data 
             FROM faceData 
@@ -226,46 +351,35 @@ def certificate_data():
         
         name, age, score, time_taken, dob, image_data = result
         
-        # Get score and time from URL parameters if available (for direct links)
         url_score = request.args.get('score')
         url_time = request.args.get('time')
         
-        # Use URL parameters if available, otherwise use database values
         final_score = int(url_score) if url_score else (score if score is not None else 0)
         final_time = int(url_time) if url_time else (time_taken if time_taken is not None else 0)
         
-        # Determine quiz level and total questions based on age
         if 6 <= age <= 10:
             level = "Beginner"
-            total_questions = 2  # Update this to match your actual question count
+            total_questions = 10
         elif 11 <= age <= 16:
-            level = "Intermediate" 
-            total_questions = 2  # Update this to match your actual question count
+            level = "Intermediate"
+            total_questions = 10
         else:
             level = "Advanced"
-            total_questions = 2  # Update this to match your actual question count
+            total_questions = 10
         
-        # Calculate accuracy
         accuracy = round((final_score / total_questions) * 100) if total_questions > 0 else 0
-        
-        # Format time
         minutes = int(final_time) // 60
         seconds = int(final_time) % 60
         time_formatted = f"{minutes}:{seconds:02d}"
         
-        # Generate unique certificate ID
         certificate_id = f"SKP-{datetime.now().year}-{user_id:04d}-{uuid.uuid4().hex[:6].upper()}"
         
-        # Convert image to base64 for display
         image_base64 = None
         if image_data:
-            # Handle PostgreSQL binary data
             if isinstance(image_data, memoryview):
-                image_bytes = image_data.tobytes()
-            else:
-                image_bytes = bytes(image_data)
-            image_base64 = f"data:image/jpeg;base64,{base64.b64encode(image_bytes).decode('utf-8')}"
-        
+                image_data = image_data.tobytes()
+            image_base64 = f"data:image/jpeg;base64,{base64.b64encode(image_data).decode('utf-8')}"
+
         return jsonify({
             "success": True,
             "name": name,
@@ -280,37 +394,10 @@ def certificate_data():
             "certificate_id": certificate_id,
             "date": datetime.now().strftime("%B %d, %Y")
         })
-        
+
     except Exception as e:
-        print(f"Database error: {str(e)}")  # For debugging
+        print(f"Database error: {str(e)}")
         return jsonify({"success": False, "message": f"Database error: {str(e)}"}), 500
-
-# ENHANCED: Update your submit-quiz route to redirect to certificate
-@app.route('/submit-quiz', methods=['POST'])
-def submit_quiz():
-    data = request.json
-    score = data.get('score')
-    time_taken = data.get('time')
-    user_id = session.get('user_id')
-
-    if user_id and score is not None:
-        try:
-            cursor.execute("UPDATE faceData SET score=%s, time_taken=%s WHERE id=%s", (score, time_taken, user_id))
-            db.commit()
-            
-            # Store in session for immediate access
-            session['quiz_score'] = score
-            session['quiz_time'] = time_taken
-            
-            return jsonify({
-                "success": True, 
-                "redirect": f"/certificate?score={score}&time={time_taken}"
-            })
-        except Exception as e:
-            print(f"Submit quiz error: {str(e)}")
-            return jsonify({"success": False, "message": f"Database error: {str(e)}"}), 500
-    
-    return jsonify({"success": False, "message": "Missing data"}), 400
 
 if __name__ == '__main__':
     app.run(debug=True)
