@@ -397,6 +397,9 @@ def certificate_data():
     except Exception as e:
         print(f"Database error: {str(e)}")
         return jsonify({"success": False, "message": f"Database error: {str(e)}"}), 500
+@app.route('/terms')
+def terms():
+    return render_template('terms.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

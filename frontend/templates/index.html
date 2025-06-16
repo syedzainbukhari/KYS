@@ -346,14 +346,14 @@
         <div class="main-container">
             <div class="registration-card">
                 <div class="card-header">
-                    <h1><i class="fas fa-graduation-cap"></i> Smart Kid Portal</h1>
+                    <h1><i class="fas fa-graduation-cap"></i> Smart Quiz Portal</h1>
                     <p>Register your child for an amazing learning experience!</p>
                 </div>
                 
                 <div class="card-body">
                     <div id="status-message" class="status-message"></div>
                     
-                    <form id="user-form">
+                    <form id="user-form" method="POST" action="/start-quiz">
                         <div class="form-group">
                             <label for="name" class="form-label">
                                 <i class="fas fa-user text-primary"></i>
@@ -403,7 +403,12 @@
                                 <img id="snapshot-preview" style="display: none;" />
                             </div>
                         </div>
-
+                        <div class="form-check mt-4">
+                                <input class="form-check-input" type="checkbox" id="consentCheckbox">
+                                <label class="form-check-label" for="consentCheckbox">
+                                     I agree to the <a href="/terms" target="_blank">terms and conditions</a> stated.
+                                </label>
+                        </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-custom btn-lg" id="submit-btn">
                                 <i class="fas fa-rocket"></i> Save & Start Quiz
@@ -599,6 +604,16 @@
         document.addEventListener('DOMContentLoaded', () => {
             new SmartKidRegistration();
         });
+        
+        document.getElementById('user-form').addEventListener('submit', function (e) {
+            const consentGiven = document.getElementById('consentCheckbox').checked;
+            if (!consentGiven) {
+             e.preventDefault();
+             alert('⚠️ Please accept the Terms and Conditions before continuing.');
+            }
+        });
+
+
     </script>
 </body>
 </html>
