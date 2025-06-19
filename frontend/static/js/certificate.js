@@ -213,30 +213,42 @@ async downloadCertificate() {
 
     const certificate = document.getElementById("certificate");
 
-    // Clone certificate for a clean version without pseudo-elements
-    const clonedCert = certificate.cloneNode(true);
-    clonedCert.classList.remove("show");
-    clonedCert.style.display = "block";
-    clonedCert.style.position = "fixed";
-    clonedCert.style.top = "0";
-    clonedCert.style.left = "0";
-    clonedCert.style.zIndex = "-9999"; // Hide from screen
+    // Create a clean wrapper for rendering
+    const renderContainer = document.createElement("div");
+    renderContainer.style.position = "fixed";
+    renderContainer.style.top = "0";
+    renderContainer.style.left = "0";
+    renderContainer.style.zIndex = "-9999";
+    renderContainer.style.background = "#fff"; // solid background
+    renderContainer.style.padding = "30px";
+    renderContainer.style.width = certificate.offsetWidth + "px";
 
-    // Remove ::before overlay by creating an alternate class (no pseudo-elements)
-    clonedCert.classList.add("no-decor");
+    // Clone certificate
+    const cloned = certificate.cloneNode(true);
+    cloned.classList.remove("show");
+    cloned.style.display = "block";
+    cloned.style.boxShadow = "none";
+    cloned.style.background = "#ffffff"; // override gradient
+    cloned.style.border = "8px solid #ffd700";
+    cloned.style.position = "static";
+    cloned.classList.add("no-decor"); // disable ::before gradients
 
-    document.body.appendChild(clonedCert);
+    // Remove animation
+    cloned.style.animation = "none";
+
+    renderContainer.appendChild(cloned);
+    document.body.appendChild(renderContainer);
 
     const html2canvas = window.html2canvas;
-    const canvas = await html2canvas(clonedCert, {
+    const canvas = await html2canvas(renderContainer, {
       scale: 2,
       backgroundColor: "#ffffff",
       useCORS: true,
-      allowTaint: true,
-      logging: false,
+      logging: false
     });
 
-    document.body.removeChild(clonedCert); // Clean up
+    // Remove the cloned DOM
+    document.body.removeChild(renderContainer);
 
     const link = document.createElement("a");
     link.download = `smart-kid-certificate-${this.certificateData?.name?.replace(/\s+/g, "-") || "user"}-${Date.now()}.png`;
@@ -257,6 +269,7 @@ async downloadCertificate() {
     }
   }
 }
+
 
 
 
