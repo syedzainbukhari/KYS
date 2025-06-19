@@ -203,28 +203,34 @@ class Certificate {
     return "Good effort! Every step in learning counts!"
   }
 
-  async downloadCertificate() {
+async downloadCertificate() {
     try {
-      const downloadBtn = document.getElementById("downloadCert")
-      if (downloadBtn) {
-        downloadBtn.disabled = true
-        downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...'
-      }
+        const downloadBtn = document.getElementById("downloadCert")
+        if (downloadBtn) {
+      downloadBtn.disabled = true
+      downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...'
+    }
 
-      const certificate = document.getElementById("certificate")
+        const certificate = document.getElementById("certificate")
 
-      // Check if html2canvas is available
-      const html2canvas = window.html2canvas // Declare the variable here
-      if (typeof html2canvas !== "undefined") {
+    // Check if html2canvas is available
+        const html2canvas = window.html2canvas
+        if (typeof html2canvas !== "undefined") {
         console.log("📸 Using html2canvas for download...")
 
+      // 👉 Hide decorative background to prevent opacity effect
+        certificate.classList.add("no-decor")
+        
         const canvas = await html2canvas(certificate, {
-          scale: 2,
-          backgroundColor: "#ffffff",
-          useCORS: true,
-          allowTaint: true,
-          logging: false,
-        })
+            scale: 2,
+            backgroundColor: "#ffffff", // Ensure solid background
+            useCORS: true,
+            allowTaint: true,
+            logging: false,
+      })
+
+      // 👉 Restore background after capture
+        certificate.classList.remove("no-decor")
 
         const link = document.createElement("a")
         link.download = `smart-kid-certificate-${this.certificateData?.name?.replace(/\s+/g, "-") || "user"}-${Date.now()}.png`
@@ -233,49 +239,49 @@ class Certificate {
         link.click()
         document.body.removeChild(link)
 
-        console.log("✅ Certificate downloaded successfully")
+            console.log("✅ Certificate downloaded successfully")
       } else {
-        console.log("⚠️ html2canvas not available, using fallback...")
+      console.log("⚠️ html2canvas not available, using fallback...")
 
-        // Fallback: download as HTML
-        const certificateHTML = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <title>Certificate - ${this.certificateData?.name || "User"}</title>
-            <style>
-              body { font-family: Arial, sans-serif; margin: 20px; }
-              .certificate { border: 2px solid #gold; padding: 20px; text-align: center; }
-            </style>
-          </head>
-          <body>
-            ${certificate.outerHTML}
-          </body>
-          </html>
-        `
+      const certificateHTML = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Certificate - ${this.certificateData?.name || "User"}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .certificate { border: 2px solid #gold; padding: 20px; text-align: center; }
+          </style>
+        </head>
+        <body>
+          ${certificate.outerHTML}
+        </body>
+        </html>
+      `
 
-        const blob = new Blob([certificateHTML], { type: "text/html" })
-        const url = URL.createObjectURL(blob)
+      const blob = new Blob([certificateHTML], { type: "text/html" })
+      const url = URL.createObjectURL(blob)
 
-        const a = document.createElement("a")
-        a.href = url
-        a.download = `certificate-${this.certificateData?.name?.replace(/\s+/g, "-") || "user"}.html`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        URL.revokeObjectURL(url)
-      }
-    } catch (error) {
-      console.error("❌ Error downloading certificate:", error)
-      alert("Error downloading certificate. Please try again.")
-    } finally {
-      const downloadBtn = document.getElementById("downloadCert")
-      if (downloadBtn) {
-        downloadBtn.disabled = false
-        downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download Certificate'
-      }
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `certificate-${this.certificateData?.name?.replace(/\s+/g, "-") || "user"}.html`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    }
+  } catch (error) {
+    console.error("❌ Error downloading certificate:", error)
+    alert("Error downloading certificate. Please try again.")
+  } finally {
+    const downloadBtn = document.getElementById("downloadCert")
+    if (downloadBtn) {
+      downloadBtn.disabled = false
+      downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download Certificate'
     }
   }
+}
+
 
   printCertificate() {
     console.log("🖨️ Printing certificate...")
